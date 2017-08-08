@@ -15,10 +15,12 @@
  * limitations under the License.
  */
 
-import { getLineRanges } from "tsutils";
+//import { getLineRanges } from "tsutils";
 import * as ts from "typescript";
 
 import * as Lint from "../index";
+
+const OPTION_IGNORE_URL = "url";
 
 export class Rule extends Lint.Rules.AbstractRule {
     /* tslint:disable:object-literal-sort-keys */
@@ -31,8 +33,19 @@ export class Rule extends Lint.Rules.AbstractRule {
             various editors, IDEs, and diff viewers.`,
         optionsDescription: "An integer indicating the max length of lines.",
         options: {
-            type: "number",
-            minimum: "1",
+            type: "array",
+            items: [
+                {
+                    type: "number",
+                    minimum: 1,
+                },
+                {
+                    type: "string",
+                    enum: [OPTION_IGNORE_URL],
+                },
+            ],
+            minLength: 1,
+            maxLength: 2,
         },
         optionExamples: [[true, 120]],
         type: "maintainability",
@@ -49,15 +62,55 @@ export class Rule extends Lint.Rules.AbstractRule {
     }
 
     public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithFunction(sourceFile, walk, this.ruleArguments[0]);
+        return this.applyWithWalker(new MaxLineLengthWalker(sourceFile, this.ruleName, this.ruleArguments));
     }
 }
 
-function walk(ctx: Lint.WalkContext<number>) {
-    const limit = ctx.options;
-    for (const line of getLineRanges(ctx.sourceFile)) {
-        if (line.contentLength > limit) {
-            ctx.addFailureAt(line.pos, line.contentLength, Rule.FAILURE_STRING_FACTORY(limit));
-        }
+class MaxLineLengthWalker extends Lint.AbstractWalker<any[]> { 
+    public walk(sourceFile: ts.SourceFile) {
+        const limit = this.options[0];
+        for (const line of getLines(sourceFile)) {
+            if (line.contentLength > limit) {
+                if (this.options[1] === OPTION_IGNORE_URL && line.hasUrl) {
+                    continue;
+                }
+                this.addFailureAt(line.pos, line.contentLength, Rule.FAILURE_STRING_FACTORY(limit));
+            }
+        }       
     }
+}
+
+function getLines(sourceFile: ts.SourceFile): any[] {
+    const lineStarts = sourceFile.getLineStarts();
+    const result = [];
+    const length = lineStarts.length;
+    const sourceText = sourceFile.text;
+    let pos = 0;
+    for (let i = 1; i < length; ++i) {
+        const end = lineStarts[i];
+        let lineEnd = end;
+        for (; lineEnd > pos; --lineEnd)
+            if (!ts.isLineBreak(sourceText.charCodeAt(lineEnd - 1)))
+                break;
+        result.push({
+            pos,
+            end,
+            contentLength: lineEnd - pos,
+            hasUrl: lineContainsUrl(sourceFile.text.substr(pos, lineEnd - pos)),
+            content: sourceFile.text.substr(pos, lineEnd - pos),
+        });
+        pos = end;
+    }
+    result.push({
+        pos,
+        end: sourceFile.end,
+        contentLength: sourceFile.end - pos,
+        hasUrl: lineContainsUrl(sourceFile.text.substr(pos, sourceFile.end - pos)),
+        content: sourceFile.text.substr(pos, sourceFile.end - pos),
+    });
+    return result;
+}
+
+function lineContainsUrl(sourceText: string): boolean {
+    return (sourceText.indexOf(`://`) > -1) ? true : false;
 }
