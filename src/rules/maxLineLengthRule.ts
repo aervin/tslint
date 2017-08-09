@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-//import { getLineRanges } from "tsutils";
 import * as ts from "typescript";
 
 import * as Lint from "../index";
@@ -66,21 +65,21 @@ export class Rule extends Lint.Rules.AbstractRule {
     }
 }
 
-class MaxLineLengthWalker extends Lint.AbstractWalker<any[]> { 
+class MaxLineLengthWalker extends Lint.AbstractWalker<any[]> {
     public walk(sourceFile: ts.SourceFile) {
         const limit = this.options[0];
         for (const line of getLines(sourceFile)) {
-            if (line.contentLength > limit) {
+            if (line.contentLength > (limit as number)) {
                 if (this.options[1] === OPTION_IGNORE_URL && line.hasUrl) {
                     continue;
                 }
-                this.addFailureAt(line.pos, line.contentLength, Rule.FAILURE_STRING_FACTORY(limit));
+                this.addFailureAt(line.pos, line.contentLength, Rule.FAILURE_STRING_FACTORY(limit as number));
             }
-        }       
+        }
     }
 }
 
-function getLines(sourceFile: ts.SourceFile): any[] {
+function getLines(sourceFile: ts.SourceFile): ILineRange[] {
     const lineStarts = sourceFile.getLineStarts();
     const result = [];
     const length = lineStarts.length;
@@ -89,28 +88,38 @@ function getLines(sourceFile: ts.SourceFile): any[] {
     for (let i = 1; i < length; ++i) {
         const end = lineStarts[i];
         let lineEnd = end;
-        for (; lineEnd > pos; --lineEnd)
-            if (!ts.isLineBreak(sourceText.charCodeAt(lineEnd - 1)))
+        for (; lineEnd > pos; --lineEnd) {
+            if (!ts.isLineBreak(sourceText.charCodeAt(lineEnd - 1))) {
                 break;
+            }
+        }
         result.push({
-            pos,
-            end,
-            contentLength: lineEnd - pos,
-            hasUrl: lineContainsUrl(sourceFile.text.substr(pos, lineEnd - pos)),
             content: sourceFile.text.substr(pos, lineEnd - pos),
+            contentLength: lineEnd - pos,
+            end,
+            hasUrl: lineContainsUrl(sourceFile.text.substr(pos, lineEnd - pos)),
+            pos,
         });
         pos = end;
     }
     result.push({
-        pos,
-        end: sourceFile.end,
-        contentLength: sourceFile.end - pos,
-        hasUrl: lineContainsUrl(sourceFile.text.substr(pos, sourceFile.end - pos)),
         content: sourceFile.text.substr(pos, sourceFile.end - pos),
+        contentLength: sourceFile.end - pos,
+        end: sourceFile.end,
+        hasUrl: lineContainsUrl(sourceFile.text.substr(pos, sourceFile.end - pos)),
+        pos,
     });
     return result;
 }
 
+interface ILineRange {
+    pos: number;
+    end: number;
+    contentLength: number;
+    hasUrl: boolean;
+    content: string;
+}
+
 function lineContainsUrl(sourceText: string): boolean {
-    return (sourceText.indexOf(`://`) > -1) ? true : false;
+    return (sourceText.indexOf("://") > -1) ? true : false;
 }

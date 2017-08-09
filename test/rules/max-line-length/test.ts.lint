@@ -1,7 +1,12 @@
  * @url complicatedNameIsAcomplicatedhttps://someapp.comNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNmeIsAcomplicat;
+
 // @url https://someapp.com/NameIsAcomplicatedNameIsAcomplicatedName/IsAcomplicatedNameIsAcomplicatedName/IsAcomplicatedNmeIsAcomplicat/IsAcomplicatedNmeIsAcomplicat;
+
 this.Http.get('https://someapp.com/NameIsAcomplicatedNameIsAcomplicatedName/IsAcomplicatedNameIsAcomplicatedName/IsAcomplicatedNmeIsAcomplicat/').subscribe(() => { });
+
 var simpleName = 1;
+
 var complicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedName;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Exceeds maximum line length of 140]
+
 var complicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicatedNameIsAcomplicat;
