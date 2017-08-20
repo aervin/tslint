@@ -103,13 +103,13 @@ function detect({ thenStatement, elseStatement }: ts.IfStatement, sourceFile: ts
 }
 
 function detectReturned({ thenStatement, elseStatement }: ts.IfStatement, sourceFile: ts.SourceFile): ts.ReturnStatement | undefined {
-    if (elseStatement === undefined || isIfStatement(elseStatement) ||
-        !thenStatement.statements.some(isReturnStatement) || !elseStatement.statements.some(isReturnStatement)) {
+    if (elseStatement === undefined || isIfStatement(elseStatement)) {
         return undefined;
     }
     const thenReturnStatement = thenStatement.find(isReturnStatement);
     const elseReturnStatement = elseStatement.find(isReturnStatement);
-    if (thenReturnStatement.expression === undefined || elseReturnStatement.expression === undefined) {
+    if (thenReturnStatement === undefined || elseReturnStatement === undefined ||
+        thenReturnStatement.expression === undefined || elseReturnStatement.expression === undefined) {
         return undefined;
     }
     return thenReturnStatement.expression.text === elseReturnStatement.expression.text ? thenReturnStatement : undefined;
