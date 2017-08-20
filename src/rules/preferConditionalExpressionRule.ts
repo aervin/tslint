@@ -102,7 +102,7 @@ function detect({ thenStatement, elseStatement }: ts.IfStatement, sourceFile: ts
     return then !== undefined && nodeEquals(elze, then, sourceFile) ? then : undefined;
 }
 
-function detectReturn({ thenStatement, elseStatement }: ts.IfStatement, sourceFile: ts.SourceFile): ts.ReturnStatement | undefined {
+function detectReturned({ thenStatement, elseStatement }: ts.IfStatement, sourceFile: ts.SourceFile): ts.ReturnStatement | undefined {
     if (elseStatement === undefined || isIfStatement(elseStatement) ||
         !thenStatement.statements.some(isReturnStatement) || !elseStatement.statements.some(isReturnStatement)) {
         return undefined;
