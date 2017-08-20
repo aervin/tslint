@@ -45,8 +45,11 @@ export class Rule extends Lint.Rules.AbstractRule {
     };
     /* tslint:enable:object-literal-sort-keys */
 
-    public static FAILURE_STRING(assigned: string): string {
-        return `Use a conditional expression instead of assigning to '${assigned}' in multiple places.`;
+    public static FAILURE_STRING(assigned: string, returnStatement?: boolean): string {
+        return (!returnStatement) ?
+                `Use a conditional expression instead of assigning to '${assigned}' in multiple places.`
+                :
+                `Use a conditional expression instead of returning '${assigned}' in multiple places.`;
     }
 
     public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
@@ -65,6 +68,13 @@ function walk(ctx: Lint.WalkContext<Options>): void {
                 ctx.addFailureAtNode(
                     node.getChildAt(0, sourceFile),
                     Rule.FAILURE_STRING(assigned.getText(sourceFile)));
+            }
+            const returned = detectReturned(node, sourceFile);
+            if (returned !== undefined) {
+                ctx.addFailureAtNode(
+                    node.getChildAt(0, sourceFile),
+                    Rule.FAILURE_STRING(returned.expression.text)
+                );
             }
             if (assigned !== undefined || !checkElseIf) {
                 // Be careful not to fail again for the "else if"
@@ -90,6 +100,19 @@ function detect({ thenStatement, elseStatement }: ts.IfStatement, sourceFile: ts
     }
     const then = getAssigned(thenStatement, sourceFile);
     return then !== undefined && nodeEquals(elze, then, sourceFile) ? then : undefined;
+}
+
+function detectReturned({ thenStatement, elseStatement }: ts.IfStatement, sourceFile: ts.SourceFile): ts.ReturnStatement | undefined {
+    if (elseStatement === undefined || isIfStatement(elseStatement)) {
+        return undefined;
+    }
+    const thenReturnStatement = thenStatement.find(isReturnStatement);
+    const elseReturnStatement = elseStatement.find(isReturnStatement);
+    if (thenReturnStatement === undefined || elseReturnStatement === undefined ||
+        thenReturnStatement.expression === undefined || elseReturnStatement.expression === undefined) {
+        return undefined;
+    }
+    return thenReturnStatement.expression.text === elseReturnStatement.expression.text ? thenReturnStatement : undefined;
 }
 
 /** Returns the left side of an assignment. */
