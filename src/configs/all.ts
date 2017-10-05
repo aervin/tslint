@@ -50,6 +50,7 @@ export const rules = {
     "no-magic-numbers": true,
     "no-namespace": true,
     "no-non-null-assertion": true,
+    "no-redundant-typedef": true,
     "no-reference": true,
     "no-this-assignment": true,
     "no-var-requires": true,
