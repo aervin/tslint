@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { isVariableDeclaration } from "tsutils";
+import { isArrowFunction, isVariableDeclaration } from "tsutils";
 import * as ts from "typescript";
 import * as Lint from "../index";
 
@@ -44,8 +44,11 @@ export class Rule extends Lint.Rules.AbstractRule {
 class NoRedundantTypedefWalker extends Lint.AbstractWalker<void> {
     public walk(sourceFile: ts.SourceFile) {
         const cb = (node: ts.Node): void => {
-            if (isVariableDeclaration(node) && node.type !== undefined) {
-                if (hasRedundantTypedef(node)) {
+            if (isVariableDeclaration(node) && variableNeedsChecking(node)) {
+                if (
+                    hasDuplicateReturnAnnotations(node) ||
+                    hasDuplicateParamAnnotations(node)
+                ) {
                     this.addFailureAtNode(node.name, Rule.FAILURE_STRING, getFix(node));
                 }
             }
@@ -55,53 +58,73 @@ class NoRedundantTypedefWalker extends Lint.AbstractWalker<void> {
     }
 }
 
-function declarationHasReturnAnnotation(node: ts.VariableDeclaration): boolean {
-    return node.type!.kind === ts.SyntaxKind.FunctionType;
+function getArrowFunctionFix(initializer: ts.ArrowFunction): Lint.Replacement {
+    return Lint.Replacement.replaceFromTo(
+        initializer.parameters.length > 0
+            ? initializer.parameters[initializer.parameters.length - 1].getEnd()
+            : initializer.getStart(),
+        initializer.equalsGreaterThanToken.getStart(),
+        initializer.parameters.length > 0 ? ") " : "() ",
+    );
 }
 
 function getFix(node: ts.VariableDeclaration): Lint.Replacement[] {
     const fixes = [];
+    const { initializer } = node;
     if (hasDuplicateParamAnnotations(node)) {
-        for (const param of (node.initializer as ts.FunctionExpression).parameters) {
+        for (const param of (initializer as ts.FunctionExpression).parameters) {
             fixes.push(
                 Lint.Replacement.deleteFromTo(param.name.getEnd(), param.getEnd()),
             );
         }
     }
+    if (hasDuplicateReturnAnnotations(node) && initializer !== undefined) {
+        fixes.push(
+            isArrowFunction(initializer)
+                ? getArrowFunctionFix(initializer)
+                : getFunctionExpressionFix(initializer as ts.FunctionExpression),
+        );
+    }
     return fixes;
 }
 
-function hasDuplicateParamAnnotations(node: ts.VariableDeclaration): boolean {
-    if (
-        (node.initializer as ts.FunctionExpression).parameters === undefined ||
-        (node.type as ts.FunctionTypeNode) === undefined
-    ) {
-        return false;
-    }
-
-    if (
-        (node.initializer as ts.FunctionExpression).parameters === undefined ||
-        (node.type as ts.FunctionTypeNode).parameters === undefined
-    ) {
-        return false;
-    }
-    return (
-        (node.type as ts.FunctionTypeNode).parameters.some(
-            (param: ts.ParameterDeclaration) => param.type !== undefined,
-        ) &&
-        (node.initializer as ts.FunctionExpression).parameters.some(
-            (param: ts.ParameterDeclaration) => param.type !== undefined,
-        )
+function getFunctionExpressionFix(initializer: ts.FunctionExpression): Lint.Replacement {
+    return Lint.Replacement.replaceFromTo(
+        initializer.parameters.length > 0
+            ? initializer.parameters[initializer.parameters.length - 1].getEnd()
+            : initializer.getStart(),
+        initializer.body.getStart(),
+        initializer.parameters.length > 0
+            ? ") "
+            : `function${initializer.name !== undefined ? initializer.name.text : ""}() `,
     );
+}
+
+function hasDuplicateParamAnnotations(node: ts.VariableDeclaration): boolean {
+    return (node.initializer as ts.FunctionExpression).parameters === undefined ||
+        (node.type as ts.FunctionTypeNode).parameters === undefined
+        ? false
+        : (node.type as ts.FunctionTypeNode).parameters.some(
+              (param: ts.ParameterDeclaration) => param.type !== undefined,
+          ) &&
+              (node.initializer as ts.FunctionExpression).parameters.some(
+                  (param: ts.ParameterDeclaration) => param.type !== undefined,
+              );
 }
 
 function hasDuplicateReturnAnnotations(node: ts.VariableDeclaration): boolean {
     return (
-        declarationHasReturnAnnotation(node) &&
+        node.type!.kind === ts.SyntaxKind.FunctionType &&
         (node.initializer as ts.FunctionLike).type !== undefined
     );
 }
 
-function hasRedundantTypedef(node: ts.VariableDeclaration): boolean {
-    return hasDuplicateReturnAnnotations(node) || hasDuplicateParamAnnotations(node);
+function variableNeedsChecking(node: ts.Node): boolean {
+    if (!isVariableDeclaration(node)) {
+        return false;
+    }
+    if (node.initializer === undefined || node.type === undefined) {
+        return false;
+    }
+    return true;
 }

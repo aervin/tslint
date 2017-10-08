@@ -1,24 +1,35 @@
+let myVerboseArrow: () => number = (): number => 5;
+    ~~~~~~~~~~~~~~ [ERROR]
+
+let myVerboseArrow: (a: string) => number = (a): number => 5;
+    ~~~~~~~~~~~~~~ [ERROR]
+
 let myVerboseSignature: (a: number) => number = function myVerboseSignature(a: number): number {
     ~~~~~~~~~~~~~~~~~~ [ERROR]
     return a;
-}
+};
+
+let myVerboseSignature: (a: number) => number = function(a): number {
+    ~~~~~~~~~~~~~~~~~~ [ERROR]
+    return a;
+};
 
 let myVerboseSignature: (a: number) => number = function myVerboseSignature(a: number) {
     ~~~~~~~~~~~~~~~~~~ [ERROR] 
     return a;
-}
+};
 
 let myVerboseSignature: (a) => number = function myVerboseSignature(a: number): number {
     ~~~~~~~~~~~~~~~~~~ [ERROR] 
     return a;
-}
+};
 
 const cb: (node: ts.Node) => void = (node: ts.Node): void => {
       ~~ [ERROR]
     let myVerboseSignature: (a: number) => number = function myVerboseSignature(a: number) {
         ~~~~~~~~~~~~~~~~~~ [ERROR] 
         return a;
-    }
+    };
     if (isVariableDeclaration(node) && node.type !== undefined) {
         if (declarationHasRedundantTypedef(node)) {
             this.addFailureAtNode(node.name, Rule.FAILURE_STRING);
@@ -37,9 +48,9 @@ const cb: (node:ts.Node) => void = (node: ts.Node) => {
     return ts.forEachChild(node, cb);
 };
 
-let a: (b: string) => string = function mySignature(b) { return b + "!"; }
+let a: (b: string) => string = function mySignature(b) { return b + "!"; };
 
-let a = function mySignature(b: string): string { return b + "!"; }
+let a = function mySignature(b: string): string { return b + "!"; };
 
 const cb: (node:ts.Node) => void = (node) => {
     if (isVariableDeclaration(node) && node.type !== undefined) {
