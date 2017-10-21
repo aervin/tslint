@@ -71,12 +71,14 @@ export class Rule extends Lint.Rules.AbstractRule {
         return super.isEnabled() && isThresholdValid;
     }
 
+    /* tslint:disable:no-get-set-accessors */
     private get threshold(): number {
         if (this.ruleArguments[0] !== undefined) {
             return this.ruleArguments[0] as number;
         }
         return Rule.DEFAULT_THRESHOLD;
     }
+    /* tslint:enable:no-get-set-accessors */
 }
 
 function walk(ctx: Lint.WalkContext<{ threshold: number }>): void {

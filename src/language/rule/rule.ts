@@ -185,9 +185,11 @@ export class Replacement {
 
     constructor(readonly start: number, readonly length: number, readonly text: string) {}
 
+    /* tslint:disable:no-get-set-accessors */
     get end() {
         return this.start + this.length;
     }
+    /* tslint:enable:no-get-set-accessors */
 
     public apply(content: string) {
         return content.substring(0, this.start) + this.text + content.substring(this.start + this.length);

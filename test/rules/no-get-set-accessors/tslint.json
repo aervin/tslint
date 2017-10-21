@@ -1,0 +1,5 @@
+{
+    "rules": {
+        "no-get-set-accessors": true
+    }
+}

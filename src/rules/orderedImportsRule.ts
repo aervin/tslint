@@ -186,9 +186,11 @@ class Walker extends Lint.AbstractWalker<Options> {
     private lastFix: Lint.Replacement[] | undefined;
     private nextType = ImportType.LIBRARY_IMPORT;
 
+    /* tslint:disable:no-get-set-accessors */
     private get currentImportsBlock(): ImportsBlock {
         return this.importsBlocks[this.importsBlocks.length - 1];
     }
+    /* tslint:enable:no-get-set-accessors */
 
     public walk(sourceFile: ts.SourceFile): void {
         for (const statement of sourceFile.statements) {

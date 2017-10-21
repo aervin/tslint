@@ -1,0 +1,32 @@
+export class AccessorClass {
+    private a = 'Hello!';
+    public get aProp(): string {
+           ~~~ [ERROR]
+        return this.a;
+    }
+}
+
+export class SetAccessorClass {
+    private a = 'Hello!';
+    public set aProp(str: string): void {
+           ~~~ [ERROR]
+        this.a = str;
+    }
+}
+
+const not = {
+    get something() {
+    ~~~ [ERROR]
+        return "hello!";
+    },
+};
+
+const okay = {
+    hello: 'hello!',
+    set someProp(str: string) {
+    ~~~ [ERROR]
+        this.hello = str;
+    },
+};
+
+[ERROR]: Get/set accessors have been disallowed.
