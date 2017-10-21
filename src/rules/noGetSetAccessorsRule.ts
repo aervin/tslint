@@ -27,7 +27,7 @@ export class Rule extends Lint.Rules.AbstractRule {
         description: Lint.Utils.dedent`
             Disallows get/set accessors.`,
         rationale: Lint.Utils.dedent`
-            Enforces a consistent method of accessing/manipulating class members.`,
+            Enforces a consistent method of accessing and manipulating properties.`,
         optionsDescription: "Not configurable.",
         options: null,
         type: "functionality",
@@ -39,12 +39,12 @@ export class Rule extends Lint.Rules.AbstractRule {
 
     public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
         return this.applyWithWalker(
-            new NoGetSetAccessorWalker(sourceFile, this.ruleName, undefined),
+            new NoGetSetAccessorsWalker(sourceFile, this.ruleName, undefined),
         );
     }
 }
 
-class NoGetSetAccessorWalker extends Lint.AbstractWalker<void> {
+class NoGetSetAccessorsWalker extends Lint.AbstractWalker<void> {
     public walk(sourceFile: ts.SourceFile) {
         const checkIfAccessor = (node: ts.Node): void => {
             if (isGetAccessorDeclaration(node) || isSetAccessorDeclaration(node)) {
