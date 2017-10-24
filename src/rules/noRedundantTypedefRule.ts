@@ -49,7 +49,11 @@ class NoRedundantTypedefWalker extends Lint.AbstractWalker<void> {
                     hasDuplicateReturnAnnotations(node) ||
                     hasDuplicateParamAnnotations(node)
                 ) {
-                    this.addFailureAtNode(node.name, Rule.FAILURE_STRING, getFix(node));
+                    this.addFailureAtNode(
+                        node.name,
+                        Rule.FAILURE_STRING,
+                        getFix(node),
+                    );
                 }
             }
             return ts.forEachChild(node, cb);
@@ -74,7 +78,10 @@ function getFix(node: ts.VariableDeclaration): Lint.Replacement[] {
     if (hasDuplicateParamAnnotations(node)) {
         for (const param of (initializer as ts.FunctionExpression).parameters) {
             fixes.push(
-                Lint.Replacement.deleteFromTo(param.name.getEnd(), param.getEnd()),
+                Lint.Replacement.deleteFromTo(
+                    param.name.getEnd(),
+                    param.getEnd(),
+                ),
             );
         }
     }
@@ -82,13 +89,17 @@ function getFix(node: ts.VariableDeclaration): Lint.Replacement[] {
         fixes.push(
             isArrowFunction(initializer)
                 ? getArrowFunctionFix(initializer)
-                : getFunctionExpressionFix(initializer as ts.FunctionExpression),
+                : getFunctionExpressionFix(
+                      initializer as ts.FunctionExpression,
+                  ),
         );
     }
     return fixes;
 }
 
-function getFunctionExpressionFix(initializer: ts.FunctionExpression): Lint.Replacement {
+function getFunctionExpressionFix(
+    initializer: ts.FunctionExpression,
+): Lint.Replacement {
     return Lint.Replacement.replaceFromTo(
         initializer.parameters.length > 0
             ? initializer.parameters[initializer.parameters.length - 1].getEnd()
@@ -96,13 +107,15 @@ function getFunctionExpressionFix(initializer: ts.FunctionExpression): Lint.Repl
         initializer.body.getStart(),
         initializer.parameters.length > 0
             ? ") "
-            : `function${initializer.name !== undefined ? initializer.name.text : ""}() `,
+            : `function${initializer.name !== undefined
+                  ? initializer.name.text
+                  : ""}() `,
     );
 }
 
 function hasDuplicateParamAnnotations(node: ts.VariableDeclaration): boolean {
-    return (node.initializer as ts.FunctionExpression).parameters === undefined ||
-        (node.type as ts.FunctionTypeNode).parameters === undefined
+    return (node.initializer as ts.FunctionExpression).parameters ===
+        undefined || (node.type as ts.FunctionTypeNode).parameters === undefined
         ? false
         : (node.type as ts.FunctionTypeNode).parameters.some(
               (param: ts.ParameterDeclaration) => param.type !== undefined,
@@ -120,11 +133,8 @@ function hasDuplicateReturnAnnotations(node: ts.VariableDeclaration): boolean {
 }
 
 function variableNeedsChecking(node: ts.Node): boolean {
-    if (!isVariableDeclaration(node)) {
-        return false;
-    }
-    if (node.initializer === undefined || node.type === undefined) {
-        return false;
-    }
-    return true;
+    return !isVariableDeclaration(node) ||
+        (node.initializer === undefined || node.type === undefined)
+        ? false
+        : true;
 }
