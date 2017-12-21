@@ -90,6 +90,7 @@ export const rules = {
     "await-promise": true,
     // "ban": no sensible default
     "ban-comma-operator": true,
+    "ban-syntax": true,
     "curly": true,
     "forin": true,
     // "import-blacklist": no sensible default
