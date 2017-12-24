@@ -1,0 +1,11 @@
+/*
+~nil [File headers must be followed by a linebreak]
+ * Bad header newline
+ */
+export class A {
+    public x = 1;
+
+    public B() {
+        return 2;
+    }
+}

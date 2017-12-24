@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import { getLineBreakStyle } from "tsutils";
 import * as ts from "typescript";
 import * as Lint from "../index";
 
@@ -36,10 +37,13 @@ export class Rule extends Lint.Rules.AbstractRule {
                 {
                     type: "string",
                 },
+                {
+                    type: "boolean",
+                },
             ],
             additionalItems: false,
             minLength: 1,
-            maxLength: 2,
+            maxLength: 3,
         },
         optionExamples: [[true, "Copyright \\d{4}", "Copyright 2017"]],
         hasFix: true,
@@ -48,13 +52,15 @@ export class Rule extends Lint.Rules.AbstractRule {
     };
     /* tslint:enable:object-literal-sort-keys */
 
-    public static FAILURE_STRING = "missing file header";
+    public static readonly FAILURE_STRING_MISSING = "missing file header";
+    public static readonly FAILURE_STRING_NEWLINE = "File headers must be followed by a linebreak";
 
     public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
         const { text } = sourceFile;
         const headerFormat = new RegExp(this.ruleArguments[0] as string);
         const textToInsert = this.ruleArguments[1] as string | undefined;
-
+        const requireNewline = this.ruleArguments[2] as boolean === undefined
+                                    ? false : true;
         // ignore shebang if it exists
         let offset = text.startsWith("#!") ? text.indexOf("\n") : 0;
         // returns the text of the first comment or undefined
@@ -72,9 +78,22 @@ export class Rule extends Lint.Rules.AbstractRule {
             const trailingNewlines = isErrorAtStart ? 2 : 1;
 
             const fix = textToInsert !== undefined
-                ? Lint.Replacement.appendText(offset, this.createComment(sourceFile, textToInsert, leadingNewlines, trailingNewlines))
+                ? Lint.Replacement.appendText(
+                    offset,
+                    this.createComment(sourceFile, textToInsert, leadingNewlines, trailingNewlines),
+                )
                 : undefined;
-            return [new Lint.RuleFailure(sourceFile, offset, offset, Rule.FAILURE_STRING, this.ruleName, fix)];
+            return [new Lint.RuleFailure(sourceFile, offset, offset, Rule.FAILURE_STRING_MISSING, this.ruleName, fix)];
+        } else if (requireNewline && sourceFile.statements[0] !== undefined && failsNewlineTest(sourceFile)) {
+            return [
+                new Lint.RuleFailure(
+                    sourceFile, offset, offset,
+                    Rule.FAILURE_STRING_NEWLINE, this.ruleName,
+                    Lint.Replacement.appendText(
+                        sourceFile.statements[0].getStart(), getLineBreakStyle(sourceFile),
+                    ),
+                ),
+            ];
         }
         return [];
     }
@@ -90,4 +109,14 @@ export class Rule extends Lint.Rules.AbstractRule {
             " */",
         ].join(lineEnding) + lineEnding.repeat(trailingNewlines);
     }
+}
+
+function failsNewlineTest(sourceFile: ts.SourceFile): boolean {
+    const stmt = sourceFile.statements[0];
+    const linebreakChar = getLineBreakStyle(sourceFile);
+
+    return (
+        sourceFile.text[stmt.getStart() - 1] !== linebreakChar ||
+        sourceFile.text[stmt.getStart() - 2] !== linebreakChar
+    );
 }

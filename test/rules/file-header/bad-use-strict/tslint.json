@@ -1,5 +1,5 @@
 {
     "rules": {
-        "file-header": [true, "Good header \\d", "Good header 2"]
+        "file-header": [true, "Good header \\d", "Good header 2", true]
     }
 }

@@ -1,0 +1,11 @@
+/*
+ * Bad header newline
+ */
+
+export class A {
+    public x = 1;
+
+    public B() {
+        return 2;
+    }
+}
