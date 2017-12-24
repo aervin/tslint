@@ -1,0 +1,13 @@
+delete someObj.prop;
+~~~~~~~~~~~~~~~~~~~ [Usage of DeleteExpression has been disallowed.]
+
+export class GetAccessorClass {
+    private h = 'hello';
+
+    public get h(): string {
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+        return this.h;
+~~~~~~~~~~~~~~~~~~~~~~
+    }
+~~~~~ [Usage of GetAccessor has been disallowed.]
+}
