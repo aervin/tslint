@@ -78,10 +78,7 @@ export class Rule extends Lint.Rules.AbstractRule {
             const trailingNewlines = isErrorAtStart ? 2 : 1;
 
             const fix = textToInsert !== undefined
-                ? Lint.Replacement.appendText(
-                    offset,
-                    this.createComment(sourceFile, textToInsert, leadingNewlines, trailingNewlines),
-                )
+                ? Lint.Replacement.appendText(offset, this.createComment(sourceFile, textToInsert, leadingNewlines, trailingNewlines))
                 : undefined;
             return [new Lint.RuleFailure(sourceFile, offset, offset, Rule.FAILURE_STRING_MISSING, this.ruleName, fix)];
         } else if (requireNewline && sourceFile.statements[0] !== undefined && failsNewlineTest(sourceFile)) {
