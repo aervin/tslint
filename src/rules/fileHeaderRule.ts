@@ -52,8 +52,7 @@ export class Rule extends Lint.Rules.AbstractRule {
     };
     /* tslint:enable:object-literal-sort-keys */
 
-    public static readonly FAILURE_STRING_MISSING = "missing file header";
-    public static readonly FAILURE_STRING_NEWLINE = "File headers must be followed by a linebreak";
+    public static readonly FAILURE_STRING = "missing file header";
 
     public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
         const { text } = sourceFile;
@@ -69,26 +68,34 @@ export class Rule extends Lint.Rules.AbstractRule {
             offset,
             (pos, end, kind) => text.substring(pos + 2, kind === ts.SyntaxKind.SingleLineCommentTrivia ? end : end - 2));
 
-        if (commentText === undefined || !headerFormat.test(commentText)) {
+        const missingHeader = fileHasMissingHeader(commentText, headerFormat);
+        const newlineFix = getNewlineFixer(sourceFile, requireNewline && commentText !== undefined);
+        if (missingHeader || (!missingHeader && newlineFix !== undefined)) {
             const isErrorAtStart = offset === 0;
             if (!isErrorAtStart) {
                 ++offset; // show warning in next line after shebang
             }
             const leadingNewlines = isErrorAtStart ? 0 : 1;
             const trailingNewlines = isErrorAtStart ? 2 : 1;
-
-            const fix = textToInsert !== undefined
-                ? Lint.Replacement.appendText(offset, this.createComment(sourceFile, textToInsert, leadingNewlines, trailingNewlines))
-                : undefined;
-            return [new Lint.RuleFailure(sourceFile, offset, offset, Rule.FAILURE_STRING_MISSING, this.ruleName, fix)];
-        } else if (requireNewline && sourceFile.statements[0] !== undefined && failsNewlineTest(sourceFile)) {
+            const fixes: Lint.Replacement[] = [];
+            const fix = textToInsert !== undefined && missingHeader
+                            ? Lint.Replacement.appendText(
+                                offset,
+                                this.createComment(
+                                    sourceFile, textToInsert,
+                                    leadingNewlines, trailingNewlines),
+                                )
+                            : undefined;
+            if (fix !== undefined) {
+                fixes.push(fix);
+            }
+            if (newlineFix !== undefined && fixes.length === 0) {
+                fixes.push(newlineFix);
+            }
             return [
                 new Lint.RuleFailure(
-                    sourceFile, offset, offset,
-                    Rule.FAILURE_STRING_NEWLINE, this.ruleName,
-                    Lint.Replacement.appendText(
-                        sourceFile.statements[0].getStart(), getLineBreakStyle(sourceFile),
-                    ),
+                    sourceFile, offset, offset, Rule.FAILURE_STRING,
+                    this.ruleName, fixes,
                 ),
             ];
         }
@@ -108,12 +115,26 @@ export class Rule extends Lint.Rules.AbstractRule {
     }
 }
 
-function failsNewlineTest(sourceFile: ts.SourceFile): boolean {
-    const stmt = sourceFile.statements[0];
-    const linebreakChar = getLineBreakStyle(sourceFile);
+function fileHasMissingHeader(commentText: string | undefined, header: RegExp): boolean {
+    return commentText === undefined || !header.test(commentText);
+}
 
-    return (
-        sourceFile.text[stmt.getStart() - 1] !== linebreakChar ||
-        sourceFile.text[stmt.getStart() - 2] !== linebreakChar
-    );
+function getNewlineFixer(
+    sourceFile: ts.SourceFile,
+    requireNewline: boolean,
+): Lint.Replacement | undefined {
+    if (requireNewline && sourceFile.statements[0] !== undefined) {
+        const stmt = sourceFile.statements[0];
+        const linebreakChar = getLineBreakStyle(sourceFile);
+        return (
+            sourceFile.text[stmt.getStart() - 1] !== linebreakChar ||
+            sourceFile.text[stmt.getStart() - 2] !== linebreakChar
+        )
+            ? Lint.Replacement.appendText(
+                sourceFile.statements[0].getStart(),
+                getLineBreakStyle(sourceFile),
+            )
+            : undefined;
+    }
+    return undefined;
 }
