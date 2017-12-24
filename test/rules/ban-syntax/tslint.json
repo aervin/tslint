@@ -1,5 +1,17 @@
 {
   "rules": {
-    "ban-syntax": [true, ["DeleteExpression", "GetAccessor"]]
+    "ban-syntax": [
+      true,
+      [
+        "DeleteExpression",
+        "ElementAccessExpression",
+        "GetAccessor",
+        "ObjectBindingPattern",
+        "ShorthandPropertyAssignment",
+        "SpreadAssignment",
+        "UnionType",
+        "VoidKeyword"
+      ]
+    ]
   }
 }

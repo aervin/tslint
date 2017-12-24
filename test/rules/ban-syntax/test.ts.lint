@@ -11,3 +11,36 @@ export class GetAccessorClass {
     }
 ~~~~~ [Usage of GetAccessor has been disallowed.]
 }
+
+class BanSyntaxWalker extends Lint.AbstractWalker<string[] | undefined> {
+                                                  ~~~~~~~~~~~~~~~~~~~~ [Usage of UnionType has been disallowed.]
+    public walk(sourceFile: ts.SourceFile) {
+        const checkForBannedNode = (node: ts.Node): void => {
+                                                    ~~~~ [Usage of VoidKeyword has been disallowed.]
+            if (
+                this.options !== undefined &&
+                this.options.some(
+                    (nodeType: string) => ts.SyntaxKind[node.kind] === {...nodeType},
+                                                                        ~~~~~~~~~~~ [Usage of SpreadAssignment has been disallowed.]
+                                          ~~~~~~~~~~~~~~~~~~~~~~~~ [Usage of ElementAccessExpression has been disallowed.]
+                )
+            ) {
+                this.addFailureAtNode(
+                    node,
+                    Rule.FAILURE_STRING_FACTORY(ts.SyntaxKind[node.kind]),
+                                                ~~~~~~~~~~~~~~~~~~~~~~~~ [Usage of ElementAccessExpression has been disallowed.]
+                );
+            }
+            return ts.forEachChild(node, checkForBannedNode);
+        };
+        return ts.forEachChild(sourceFile, checkForBannedNode);
+    }
+}
+
+const {pos} = node;
+      ~~~~~ [Usage of ObjectBindingPattern has been disallowed.]
+
+let y = {
+    pos
+    ~~~ [Usage of ShorthandPropertyAssignment has been disallowed.]
+}
