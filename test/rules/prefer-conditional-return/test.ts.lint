@@ -1,0 +1,162 @@
+if (a) continue;
+
+function a() {
+    if (a > 0) {
+        return 0;
+    } else {
+        if (a) {
+        ~~ [ERROR_RETURN]
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+function b() {
+    if (a > 0) {
+    ~~ [ERROR_RETURN]
+        return true;
+    } else {
+        return false;
+    }
+}
+
+if (a.someLongNestedProp.willMakeFixerFormattingStrange()) {
+~~ [ERROR_RETURN]
+    return 100000 * 11 * .1;
+} else {
+    return someOtherThing.thatWillMakeFormattingStranger();
+}
+
+if (s) {
+    return a;
+} else if (t) {
+    if (b) {
+    ~~ [ERROR_RETURN]
+        return z;
+    } else {
+        return y;
+    }
+} else {
+    return b;
+}
+
+if (a) {
+~~ [ERROR_ASSIGNMENT % ('b')]
+    b = 0;
+} else {
+    b = 1;
+}
+
+if (c) {
+    b = 2;
+} else if (d) {
+    if (e) {
+    ~~ [ERROR_ASSIGNMENT % ('b')]
+        b = 3;
+    } else {
+        b = 4;
+    }
+} else {
+    b = 5;
+}
+
+let x;
+if (true) {
+~~ [ERROR_ASSIGNMENT % ('x')]
+    x = 1;
+} else {
+    x = 2;
+}
+
+if (true)
+    x = "TRUE";
+else if (false)
+    x = "FALSE";
+else
+    x = "FILE_NOT_FOUND";
+
+// Must assign same variable
+if (true) {
+    x = 1;
+} else {
+    y = 2;
+}
+
+// All branches must be present
+if (true) {
+    x = 1;
+}
+
+// Must not be a multi-statement block.
+if (true) {
+    x = 1;
+} else {
+    x = 2;
+    y = 3;
+}
+
+// Or even multi-line.
+if (true)
+    x = [
+        1,
+        2
+    ];
+else
+    x = 3;
+
+// Works for complex left hand side.
+if (true) {
+~~ [ERROR_ASSIGNMENT % ('foo(bar).baz')]
+    foo(bar).baz = 0;
+} else {
+    foo(bar).baz = 1;
+}
+
+// leave nested if statements alone
+if (length === 0) {
+    x = "foo";
+} else if (length === 1) {
+    x = "bar";
+} else if (length === 2) {
+       ~~ [ERROR_ASSIGNMENT % ('x')]
+    x = "something else";
+} else {
+    x = "unknown";
+}
+
+if (length === 0) {
+    x = "foo";
+} else {
+    if (length === 1) {
+        x = "bar";
+    } else {
+        if (length === 2) {
+        ~~ [ERROR_ASSIGNMENT % ('x')]
+            x = "something else";
+        } else {
+            x = "unknown";
+        }
+    }
+}
+
+if (length === 0) {
+    x = "foo";
+} else if (length === 1) {
+    x = "bar";
+} else if (length === 2) {
+    x = "something else";
+} else {
+    foo();
+    // detects nested if statements when not direct child of else
+    if (bar) {
+    ~~ [ERROR_ASSIGNMENT % ('x')]
+        x = 1;
+    } else {
+        x = 2;
+    }
+}
+
+[ERROR_RETURN]: Return values using a conditional expression instead of an 'if' statement
+[ERROR_ASSIGNMENT]: Assign to '%s' using a conditional expression instead of an 'if' statement

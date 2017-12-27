@@ -57,6 +57,7 @@ export const rules = {
     "prefer-for-of": true,
     "prefer-readonly": true,
     "promise-function-async": true,
+    "prefer-conditional-return": true,
     "typedef": [
         true,
         "call-signature",

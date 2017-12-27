@@ -468,6 +468,7 @@ class ImportsBlock {
 
     private getImportType(sourcePath: string): ImportType {
         if (sourcePath.charAt(0) === ".") {
+            // tslint:disable-next-line prefer-conditional-return
             if (sourcePath.charAt(1) === ".") {
                 return ImportType.PARENT_DIRECTORY_IMPORT;
             } else {
