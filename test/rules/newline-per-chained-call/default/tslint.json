@@ -1,5 +1,5 @@
 {
-    "rules": {
-        "newline-per-chained-call": true
-    }
+  "rules": {
+    "newline-per-chained-call": true
+  }
 }

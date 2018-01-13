@@ -1,5 +1,35 @@
+SomeClass
+    .propA
+    .propB
+    .helloYay(function() {
+        return 1;
+    }).test();
+
+SomeClass
+    .propA
+    .propB
+    .helloYay(function() {
+        return 1;
+    }).  test();
+
+SomeClass.propA.propB.methodB(() => {
+    return "hello Yay!";
+}).helloYay((a: number) => {
+    return a + 1;
+}).helloYayB((a: number) => {
+    return a + 1;
+});
+
+SomeClass.propA.propB.methodB(() => {
+    return "hello Yay!";
+}).uhOh().helloYay((a: number) => {
+         ~~~~~~~~~ [ERROR]
+    return a + 1;
+}).helloYayB((a: number) => {
+    return a + 1;
+});
+
 this.getFoo()[0].toString();
-                ~~~~~~~~~ [ERROR]
 
 this.foo()["bar"]().buzz();
                    ~~~~~ [ERROR]
@@ -7,14 +37,11 @@ this.foo()["bar"]().buzz();
 this.foo()["bar"]();
 
 foo().bar();
-     ~~~~ [ERROR]
 
 const y: string[] = _observable
                         .map(function(item) { return item.helloYay().another() }
-                                                                    ~~~~~~~~ [ERROR]
                         .operator()    
                         .another(function(result) { return result.hello.Yay! }).wrong();
-                                                                               ~~~~~~ [ERROR]
 
 SomeClass.propA.helloYay((a: number) => {
     return a + 1;
@@ -30,7 +57,6 @@ const y: string[] = _observable
 
 const y: string[] = _observable.map(item => item.helloYay).operator().another(function(result) { return result.helloYay! });
                                                                      ~~~~~~~~ [ERROR]
-                                                          ~~~~~~~~~ [ERROR]
 
 const x: string[] = _observable.map(item => item.helloYay);
 
@@ -50,33 +76,8 @@ SomeClass
     .propB
     .helloYay(function() {
         return 1;
-    }).test();
-      ~~~~~ [ERROR]
-
-SomeClass
-    .propA
-    .propB
-    .helloYay(function() {
-        return 1;
-    }).  test();
-      ~~~~~~~ [ERROR]
-
-SomeClass
-    .propA
-    .propB
-    .helloYay(function() {
-        return 1;
     }).
-      ~
     test();
-~~~~~~~~ [ERROR]
-
-SomeClass.propA.propB.methodB(() => {
-    return "hello Yay!";
-}).helloYay((a: number) => {
-  ~~~~~~~~~ [ERROR]
-    return a + 1;
-});
 
 SomeClass.propA.propB.methodB(() => {
     return "hello Yay!";
@@ -92,7 +93,6 @@ SomeClass.propA.propB.methodB(() => {
     return obj.method()
                 .chainedButOkay(
                     objB.nested().superNestedCall()
-                                 ~~~~~~~~~~~~~~~~ [ERROR]
                 )
 });
 

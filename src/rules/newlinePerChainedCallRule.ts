@@ -24,7 +24,15 @@ import {
 import * as ts from "typescript";
 import * as Lint from "..";
 
+export interface Options {
+    maxCallsPerLine: number;
+}
+
 export class Rule extends Lint.Rules.AbstractRule {
+    public static DEFAULT_CONFIG: Options = {
+        maxCallsPerLine: 1,
+    };
+
     /* tslint:disable:object-literal-sort-keys */
     public static metadata: Lint.IRuleMetadata = {
         ruleName: "newline-per-chained-call",
@@ -42,29 +50,44 @@ export class Rule extends Lint.Rules.AbstractRule {
 
     public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
         return this.applyWithWalker(
-            new NewlinePerChainedCallWalker(sourceFile, this.ruleName, undefined),
+            new NewlinePerChainedCallWalker(
+                sourceFile,
+                this.ruleName,
+                this.parseOptions(this.ruleArguments[0]),
+            ),
         );
     }
+
+    /* tslint:disable: no-unsafe-any strict-boolean-expressions */
+    private parseOptions(arg: any): Options {
+        return typeof arg !== "object"
+            ? Rule.DEFAULT_CONFIG
+            : {
+                  maxCallsPerLine:
+                      arg["max-calls-per-line"] || Rule.DEFAULT_CONFIG.maxCallsPerLine,
+              };
+    }
+    /* tslint:enable: no-unsafe-any strict-boolean-expressions */
 }
 
-class NewlinePerChainedCallWalker extends Lint.AbstractWalker<void> {
+class NewlinePerChainedCallWalker extends Lint.AbstractWalker<Options> {
     public walk(sourceFile: ts.SourceFile) {
         const checkForSameLine = (node: ts.Node): void => {
-            if (
-                isCallExpression(node) &&
-                isPropertyAccessExpression(node.expression) &&
-                isSameLine(
-                    sourceFile,
-                    node.expression.expression.end,
-                    node.expression.name.pos,
-                ) &&
-                hasChildCall(node.expression)
-            ) {
-                this.addFailure(
-                    node.expression.name.pos - 1,
-                    node.expression.name.end,
-                    Rule.FAILURE_STRING,
+            if (isCallExpression(node) && isPropertyAccessExpression(node.expression)) {
+                const nthChildCall = getNthChildCall(
+                    node.expression,
+                    this.options.maxCallsPerLine,
                 );
+                if (
+                    nthChildCall !== undefined &&
+                    isSameLine(sourceFile, nthChildCall.end, node.expression.name.pos)
+                ) {
+                    this.addFailure(
+                        node.expression.name.pos - 1,
+                        node.expression.name.end,
+                        Rule.FAILURE_STRING,
+                    );
+                }
             }
             return ts.forEachChild(node, checkForSameLine);
         };
@@ -72,13 +95,22 @@ class NewlinePerChainedCallWalker extends Lint.AbstractWalker<void> {
     }
 }
 
-function hasChildCall(node: ts.PropertyAccessExpression): boolean {
+function getNthChildCall(
+    node: ts.PropertyAccessExpression,
+    requestedDepth: number,
+): ts.CallExpression | undefined {
+    let depth = 0;
     let { expression } = node;
     while (
-        isPropertyAccessExpression(expression) ||
-        isElementAccessExpression(expression)
+        (isPropertyAccessExpression(expression) ||
+            isElementAccessExpression(expression) ||
+            isCallExpression(expression)) &&
+        requestedDepth > depth
     ) {
-        ({ expression } = expression);
+        depth += isCallExpression(expression) ? 1 : 0;
+        expression = depth < requestedDepth ? expression.expression : expression;
     }
-    return expression.kind === ts.SyntaxKind.CallExpression;
+    return expression.kind === ts.SyntaxKind.CallExpression && depth === requestedDepth
+        ? (expression as ts.CallExpression)
+        : undefined;
 }
