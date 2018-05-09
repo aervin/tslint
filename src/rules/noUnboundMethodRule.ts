@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { hasModifier, isPropertyAccessExpression } from "tsutils";
+import { hasModifier, isPropertyAccessExpression, isObjectBindingPattern } from "tsutils";
 import * as ts from "typescript";
 import * as Lint from "../index";
 
@@ -96,11 +96,21 @@ export class Rule extends Lint.Rules.TypedRule {
 
 function walk(ctx: Lint.WalkContext<Options>, tc: ts.TypeChecker) {
     return ts.forEachChild(ctx.sourceFile, function cb(node): void {
-        if (isPropertyAccessExpression(node) && !isSafeUse(node)) {
+        if ((isPropertyAccessExpression(node) && !isSafeUse(node))) {
             const symbol = tc.getSymbolAtLocation(node);
             const declaration = symbol === undefined ? undefined : symbol.valueDeclaration;
             if (declaration !== undefined && isMethod(declaration, ctx.options.ignoreStatic)) {
                 ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
+            }
+        } else if (isObjectBindingPattern(node) && node.parent && node.parent!.initializer) {
+            const symbol = tc.getSymbolAtLocation(node.parent!.initializer!);
+            if (symbol && symbol.members) {
+                for (const el of node.elements) {
+                    const elIdentifier = el.propertyName ? el.propertyName : el.name;
+                    if (symbol.members.has(elIdentifier.getText() as ts.__String)) {
+                        ctx.addFailureAtNode(elIdentifier, Rule.FAILURE_STRING);
+                    }
+                }
             }
         }
         return ts.forEachChild(node, cb);

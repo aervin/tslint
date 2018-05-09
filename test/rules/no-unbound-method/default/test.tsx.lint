@@ -56,4 +56,18 @@ class Validators {
 Validators.compose(Validators.required);
                    ~~~~~~~~~~~~~~~~~~~ [0]
 
+const { stringify } = JSON;
+        ~~~~~~~~~ [0]
+
+const { stringify: str } = JSON;
+        ~~~~~~~~~ [0]
+
+const { stringify, parse } = JSON;
+        ~~~~~~~~~ [0]
+                   ~~~~~ [0]
+
+const { stringify: str, parse: prs } = JSON;
+        ~~~~~~~~~ [0]
+                        ~~~~~ [0]
+
 [0]: Avoid referencing unbound methods which may cause unintentional scoping of 'this'.
