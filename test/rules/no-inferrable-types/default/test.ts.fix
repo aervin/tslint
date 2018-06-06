@@ -33,3 +33,6 @@ function bar(a = 5, b = true, c = "bah") { }
 // not errors, types are not inferrable
 function baz(a: any = 5, b: any = true, c: any = "bah") { }
 
+// fixer should maintain question token
+export class HisSearchCriterion { showNullItem? = false; }
+

@@ -46,6 +46,10 @@ function bar(a = 5, b = true, c = "bah") { }
 // not errors, types are not inferrable
 function baz(a: any = 5, b: any = true, c: any = "bah") { }
 
+// fixer should maintain question token
+export class HisSearchCriterion { showNullItem?: boolean = false; }
+                                                 ~~~~~~~ [boolean]
+
 [number]: Type number trivially inferred from a number literal, remove type annotation
 [boolean]: Type boolean trivially inferred from a boolean literal, remove type annotation
 [string]: Type string trivially inferred from a string literal, remove type annotation

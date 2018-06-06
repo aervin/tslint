@@ -17,7 +17,6 @@
 
 import { hasModifier } from "tsutils";
 import * as ts from "typescript";
-
 import * as Lint from "../index";
 
 const OPTION_IGNORE_PARMS = "ignore-params";
@@ -77,9 +76,13 @@ class NoInferrableTypesWalker extends Lint.AbstractWalker<Options> {
         const cb = (node: ts.Node): void => {
             if (shouldCheck(node, this.options)) {
                 const { name, type, initializer } = node;
+                const questionToken = (node as ts.PropertyDeclaration | ts.ParameterDeclaration).questionToken;
                 if (type !== undefined && initializer !== undefined
                     && typeIsInferrable(type.kind, initializer)) {
-                    const fix = Lint.Replacement.deleteFromTo(name.end, type.end);
+                    const fix = Lint.Replacement.deleteFromTo(
+                        questionToken === undefined ? name.end : questionToken.end,
+                        type.end,
+                    );
                     this.addFailureAtNode(type, Rule.FAILURE_STRING_FACTORY(ts.tokenToString(type.kind)!), fix);
                 }
             }
